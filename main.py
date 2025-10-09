@@ -60,7 +60,7 @@ def hf_summarize(text, max_chars=SUMMARY_LIMIT):
     if not HF_TOKEN: return simple_lead_summary(text, max_chars)
     try:
         r = requests.post(
-            "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
+            "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6",
             headers={"Authorization": f"Bearer {HF_TOKEN}"},
             json={"inputs": text[:2000]}, timeout=60)
         r.raise_for_status()
@@ -176,6 +176,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
