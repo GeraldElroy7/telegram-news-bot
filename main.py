@@ -1,10 +1,9 @@
-import os, json, time, re, hashlib
+import os, json, re, hashlib, asyncio, time
 import requests
 from bs4 import BeautifulSoup
 from telegram import Bot
 from datetime import datetime, timezone
 from html import unescape
-import asyncio
 
 # ========= Konfigurasi =========
 RSS_BASE = "https://api.rss2json.com/v1/api.json?rss_url="
@@ -24,16 +23,13 @@ KEYWORDS = [
     "INTP","ASSA","BUKA","SIDO","HEAL","MTEL","MEDC","IPO","dividen","buyback",
     "emiten","right issue","pasar modal","saham"
 ]
-ALLOW_ALL_IF_NO_MATCH = False
+ALLOW_ALL_IF_NO_MATCH = True
 SUMMARY_LIMIT = 600
 
-# ========= ENVIRONMENT (isi di GitHub Secrets) =========
+# ========= CONFIG BOT =========
 BOT_TOKEN = "7574393949:AAEHMnzh7UyNQ6N3iZXWUJ2fhRVbO0lv9Gg"
-CHANNEL_ID = -1002489204952     # id group/channel kamu
-THREAD_ID = 3750                # id topik "NEWS" kamu
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-assert BOT_TOKEN and CHANNEL_ID, "BOT_TOKEN dan CHANNEL_ID wajib diisi lewat GitHub Secrets"
+CHANNEL_ID = -1002489204952   # group/channel id
+THREAD_ID = 3750              # thread/topic id
 bot = Bot(token=BOT_TOKEN)
 
 # ========= Cache =========
@@ -45,32 +41,13 @@ else:
     sent_db = {"items": []}
 sent_hashes = set(sent_db.get("items", []))
 
-# ========= Helper =========
+# ========= Utility =========
 def normalize_text(s): return re.sub(r"\s+", " ", s).strip()
 def sentence_split(text): return [p.strip() for p in re.split(r"(?<=[.!?])\s+", text) if p.strip()]
 
-def simple_lead_summary(text, max_chars=SUMMARY_LIMIT):
+def simple_summary(text, max_chars=SUMMARY_LIMIT):
     sents = sentence_split(text)
-    out, total = [], 0
-    for s in sents:
-        if total + len(s) > max_chars or len(out) >= 3: break
-        out.append(s); total += len(s)
-    return " ".join(out) if out else text[:max_chars]
-
-def hf_summarize(text, max_chars=SUMMARY_LIMIT):
-    if not HF_TOKEN: return simple_lead_summary(text, max_chars)
-    try:
-        r = requests.post(
-            "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
-            headers={"Authorization": f"Bearer {HF_TOKEN}"},
-            json={"inputs": text[:2000]}, timeout=60)
-        r.raise_for_status()
-        data = r.json()
-        if isinstance(data, list) and data and "summary_text" in data[0]:
-            return normalize_text(data[0]["summary_text"])[:max_chars]
-    except Exception as e:
-        print(f"[WARN] Summarization fallback: {e}")
-    return simple_lead_summary(text, max_chars)
+    return " ".join(sents[:3])[:max_chars]
 
 def fetch_article_text(url):
     try:
@@ -85,9 +62,7 @@ def fetch_article_text(url):
 
 def match_keywords(title, summary, body):
     blob = f"{title} {summary} {body}".lower()
-    for k in KEYWORDS:
-        if k.lower() in blob: return True
-    return ALLOW_ALL_IF_NO_MATCH
+    return any(k.lower() in blob for k in KEYWORDS) or ALLOW_ALL_IF_NO_MATCH
 
 def mk_hash(source, title, link):
     return hashlib.sha256(f"{source}::{title}::{link}".encode("utf-8")).hexdigest()
@@ -99,14 +74,8 @@ def format_message(source, title, link, summary):
     msg = f"📰 *{safe_title}*\n_{source}_ • 🕒 {now}\n\n{safe_sum}\n\n👉 {link}"
     return msg[:4000]
 
-# ========= Main Logic =========
-from html import unescape
-
-import asyncio
-
-# ========= Main Logic =========
+# ========= Core Logic =========
 async def process_feed(source, url):
-    global sent_hashes
     print(f"[INFO] Fetching {source} via rss2json...")
     try:
         r = requests.get(url, timeout=30)
@@ -138,15 +107,10 @@ async def process_feed(source, url):
 
         body = fetch_article_text(link)
         if not match_keywords(title, summary_hint, body):
-            # untuk testing, tetap kirim 1 berita biar kelihatan
-            if sent_count == 0:
-                print(f"[TEST] {source}: No keyword match, sending first for debug.")
-            else:
-                continue
-
+            continue
 
         base_text = body or summary_hint or title
-        summary = hf_summarize(base_text)
+        summary = simple_summary(base_text)
         msg = format_message(source, title, link, summary)
 
         try:
@@ -173,8 +137,11 @@ async def process_feed(source, url):
         except Exception as e:
             print(f"[ERROR SEND] {e}")
 
+    print(f"[SUMMARY] {source}: sent {sent_count} news.")
+
+# ========= Main =========
 async def main():
-    print("[START] Running Telegram News Bot (rss2json mode with topic support)")
+    print("[START] Running Telegram News Bot (async, no HuggingFace)")
     print(f"BOT posting to {CHANNEL_ID}, thread={THREAD_ID}")
     for src, u in FEEDS.items():
         await process_feed(src, u)
@@ -182,14 +149,5 @@ async def main():
         json.dump({"items": list(sent_hashes)}, f, ensure_ascii=False, indent=2)
     print("[DONE] Bot run completed.")
 
-
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-
-
-
-
-
