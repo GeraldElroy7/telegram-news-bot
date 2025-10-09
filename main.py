@@ -113,6 +113,13 @@ def process_feed(source: str, url: str):
     global sent_hashes
     print(f"[INFO] Checking {source} feed...")
 
+    print(f"[TEST] Trying to fetch {url}")
+    try:
+        r = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0 (GitHubBot)"})
+        print(f"[TEST] HTTP {r.status_code}, {len(r.text)} chars")
+    except Exception as e:
+        print(f"[TEST ERROR] {e}")
+
     feed = feedparser.parse(url)
     sent_any = False
 
@@ -171,4 +178,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
