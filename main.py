@@ -102,7 +102,10 @@ def format_message(source, title, link, summary):
 # ========= Main Logic =========
 from html import unescape
 
-def process_feed(source, url):
+import asyncio
+
+# ========= Main Logic =========
+async def process_feed(source, url):
     global sent_hashes
     print(f"[INFO] Fetching {source} via rss2json...")
     try:
@@ -124,7 +127,6 @@ def process_feed(source, url):
         if not title or not link:
             continue
 
-        # 🖼️ Extract image URL if exists
         soup = BeautifulSoup(summary_html, "lxml")
         img_tag = soup.find("img")
         img_url = img_tag["src"] if img_tag else None
@@ -162,21 +164,24 @@ def process_feed(source, url):
             print(f"[SENT] {source} - {title}")
             sent_hashes.add(h)
             sent_count += 1
-            time.sleep(1.5)
+            await asyncio.sleep(1.5)
         except Exception as e:
             print(f"[ERROR SEND] {e}")
 
-def main():
+async def main():
     print("[START] Running Telegram News Bot (rss2json mode with topic support)")
     print(f"BOT posting to {CHANNEL_ID}, thread={THREAD_ID}")
     for src, u in FEEDS.items():
-        process_feed(src, u)
+        await process_feed(src, u)
     with open(DB_PATH, "w", encoding="utf-8") as f:
         json.dump({"items": list(sent_hashes)}, f, ensure_ascii=False, indent=2)
     print("[DONE] Bot run completed.")
 
+
 if __name__ == "__main__":
     asyncio.run(main())
+
+
 
 
 
