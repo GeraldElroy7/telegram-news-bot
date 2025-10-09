@@ -21,7 +21,7 @@ KEYWORDS = [
     "INTP","ASSA","BUKA","SIDO","HEAL","MTEL","MEDC","IPO","dividen","buyback",
     "emiten","right issue","pasar modal","saham"
 ]
-ALLOW_ALL_IF_NO_MATCH = False
+ALLOW_ALL_IF_NO_MATCH = True
 SUMMARY_LIMIT = 600
 
 # ========= Environment =========
@@ -171,3 +171,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
