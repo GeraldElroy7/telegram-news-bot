@@ -18,11 +18,11 @@ FEEDS = {
 }
 
 KEYWORDS = [
-    "IHSG","BEI","IDX","rupiah","inflasi","BI rate","suku bunga","obligasi","SUN",
+    "IHSG","BEI","IDX","inflasi","BI rate","suku bunga","obligasi",
     "BBCA","BBRI","BMRI","BBNI","ASII","TLKM","ANTM","INCO","MDKA","ADRO","PGAS",
     "PTBA","BRIS","AMMN","GOTO","ARTO","UNVR","ICBP","INDF","KLBF","CPIN","SMGR",
-    "INTP","ASSA","BUKA","SIDO","HEAL","MTEL","MEDC","IPO","dividen","buyback",
-    "emiten","right issue","pasar modal","saham"
+    "INTP","ASSA","BUKA","SIDO","CDIA","MTEL","MEDC","IPO","dividen","buyback",
+    "emiten","right issue","pasar modal","saham","prajogo","BRPT","CDIA"
 ]
 ALLOW_ALL_IF_NO_MATCH = True
 SUMMARY_LIMIT = 600
@@ -152,4 +152,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
