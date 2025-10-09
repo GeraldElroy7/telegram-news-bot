@@ -7,11 +7,11 @@ from datetime import datetime, timezone
 
 # ========= Config =========
 FEEDS = {
-    "CNBC": "https://www.cnbcindonesia.com/market/rss",
-    "Kontan": "https://www.kontan.co.id/rss",
-    "Bisnis": "https://www.bisnis.com/rss",
-    "IDNFinancials": "https://www.idnfinancials.com/rss/news",
-    "IDX": "https://www.idx.co.id/umbraco/Surface/RssFeed/GetRssFeed?feedName=News"
+    "CNBC": "https://api.rss2json.com/v1/api.json?rss_url=https://www.cnbcindonesia.com/market/rss",
+    "Kontan": "https://api.rss2json.com/v1/api.json?rss_url=https://www.kontan.co.id/rss",
+    "Bisnis": "https://api.rss2json.com/v1/api.json?rss_url=https://www.bisnis.com/rss",
+    "IDNFinancials": "https://api.rss2json.com/v1/api.json?rss_url=https://www.idnfinancials.com/rss/news",
+    "IDX": "https://api.rss2json.com/v1/api.json?rss_url=https://www.idx.co.id/umbraco/Surface/RssFeed/GetRssFeed?feedName=News"
 }
 
 KEYWORDS = [
@@ -181,3 +181,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
