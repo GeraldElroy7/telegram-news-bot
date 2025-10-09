@@ -19,7 +19,7 @@ KEYWORDS = [
     "BBCA","BBRI","BMRI","BBNI","ASII","TLKM","ANTM","INCO","MDKA","ADRO","PGAS",
     "PTBA","BRIS","AMMN","GOTO","ARTO","UNVR","ICBP","INDF","KLBF","CPIN","SMGR",
     "INTP","ASSA","BUKA","SIDO","HEAL","MTEL","MEDC","IPO","dividen","buyback",
-    "emiten","right issue","pasar modal","saham"
+    "emiten","right issue","pasar modal","saham","ekonomi","market","bursa"
 ]
 ALLOW_ALL_IF_NO_MATCH = True
 SUMMARY_LIMIT = 600
@@ -83,15 +83,14 @@ def fetch_article_text(url: str) -> str:
             tag.decompose()
         paras = [normalize_text(p.get_text(" ")) for p in soup.find_all("p")]
         return " ".join([p for p in paras if len(p) > 40])[:8000]
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR FETCH] {url} -> {e}")
         return ""
 
-def match_keywords(title: str, summary: str, body: str) -> bool:
+def match_keywords(title: str, summary: str, body: str):
     blob = f"{title} {summary} {body}".lower()
-    for k in KEYWORDS:
-        if k.lower() in blob:
-            return True
-    return ALLOW_ALL_IF_NO_MATCH
+    matched = [k for k in KEYWORDS if k.lower() in blob]
+    return matched
 
 def mk_hash(source: str, title: str, link: str) -> str:
     return hashlib.sha256(f"{source}::{title}::{link}".encode("utf-8")).hexdigest()
@@ -114,10 +113,12 @@ def process_feed(source: str, url: str):
     print(f"[INFO] Checking {source} feed...")
     feed = feedparser.parse(url)
     sent_count = 0
+    total_checked = 0
 
     for entry in feed.entries:
         if sent_count >= 3:
             break
+        total_checked += 1
 
         title = entry.get("title", "").strip()
         link = entry.get("link", "").strip()
@@ -125,16 +126,21 @@ def process_feed(source: str, url: str):
         summary_hint = BeautifulSoup(summary_html, "lxml").get_text(" ", strip=True)
 
         if not title or not link:
+            print(f"[SKIP] {source} - Missing title/link")
             continue
 
         h = mk_hash(source, title, link)
         if h in sent_hashes:
+            print(f"[SKIP] {source} - Already sent: {title}")
             continue
 
         body = fetch_article_text(link)
-        if not match_keywords(title, summary_hint, body):
+        matched = match_keywords(title, summary_hint, body)
+        if not matched and not ALLOW_ALL_IF_NO_MATCH:
+            print(f"[SKIP] {source} - No keyword match: {title}")
             continue
 
+        print(f"[MATCH] {source} - {title} | Keywords: {matched if matched else 'All allowed'}")
         base_text = body or summary_hint or title
         summary = hf_summarize(base_text, SUMMARY_LIMIT)
         msg = format_message(source, title, link, summary)
@@ -147,18 +153,22 @@ def process_feed(source: str, url: str):
                     parse_mode="Markdown",
                     message_thread_id=int(THREAD_ID)
                 )
+                print(f"[SENT] {source} -> thread {THREAD_ID}")
             else:
                 bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown")
+                print(f"[SENT] {source} -> main chat")
 
-            print(f"[SENT] {source} - {title}")
             sent_hashes.add(h)
             sent_count += 1
             time.sleep(2)
         except Exception as e:
-            print(f"[ERROR SEND] {e}")
+            print(f"[ERROR SEND] {source} - {title} -> {e}")
+
+    print(f"[SUMMARY] {source}: checked={total_checked}, sent={sent_count}")
 
 def main():
-    print("[START] Running Telegram News Bot (topic mode)")
+    print("[START] Running Telegram News Bot (debug mode)")
+    print(f"BOT: {CHANNEL_ID}, THREAD: {THREAD_ID}, ALLOW_ALL_IF_NO_MATCH={ALLOW_ALL_IF_NO_MATCH}")
     for src, u in FEEDS.items():
         try:
             process_feed(src, u)
@@ -171,4 +181,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
