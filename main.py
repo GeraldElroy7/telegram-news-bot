@@ -30,7 +30,7 @@ SUMMARY_LIMIT = 600
 BOT_TOKEN = "7574393949:AAEHMnzh7UyNQ6N3iZXWUJ2fhRVbO0lv9Gg"
 CHANNEL_ID = -1002489204952     # id group/channel kamu
 THREAD_ID = 3750                # id topik "NEWS" kamu
-HF_TOKEN = "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" 
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 assert BOT_TOKEN and CHANNEL_ID, "BOT_TOKEN dan CHANNEL_ID wajib diisi lewat GitHub Secrets"
 bot = Bot(token=BOT_TOKEN)
@@ -176,5 +176,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
