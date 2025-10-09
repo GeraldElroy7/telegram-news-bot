@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from telegram import Bot
 from datetime import datetime, timezone
 from html import unescape
+import asyncio
 
 # ========= Konfigurasi =========
 RSS_BASE = "https://api.rss2json.com/v1/api.json?rss_url="
@@ -60,7 +61,7 @@ def hf_summarize(text, max_chars=SUMMARY_LIMIT):
     if not HF_TOKEN: return simple_lead_summary(text, max_chars)
     try:
         r = requests.post(
-            "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6",
+            "https://api-inference.huggingface.co/models/csebuetnlp/mT5_m2o_mbart_mlsum_summary_indonesian",
             headers={"Authorization": f"Bearer {HF_TOKEN}"},
             json={"inputs": text[:2000]}, timeout=60)
         r.raise_for_status()
@@ -143,7 +144,7 @@ def process_feed(source, url):
 
         try:
             if img_url:
-                bot.send_photo(
+                await bot.send_photo(
                     chat_id=CHANNEL_ID,
                     photo=img_url,
                     caption=msg,
@@ -151,7 +152,7 @@ def process_feed(source, url):
                     message_thread_id=THREAD_ID
                 )
             else:
-                bot.send_message(
+                await bot.send_message(
                     chat_id=CHANNEL_ID,
                     text=msg,
                     parse_mode="Markdown",
@@ -175,7 +176,8 @@ def main():
     print("[DONE] Bot run completed.")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
+
 
 
 
