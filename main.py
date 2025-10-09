@@ -27,10 +27,10 @@ ALLOW_ALL_IF_NO_MATCH = False
 SUMMARY_LIMIT = 600
 
 # ========= ENVIRONMENT (isi di GitHub Secrets) =========
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")    # contoh: -1002489204952
-THREAD_ID = os.getenv("THREAD_ID")      # contoh: 3750 (optional)
-HF_TOKEN = os.getenv("HF_TOKEN")
+BOT_TOKEN = "7574393949:AAEHMnzh7UyNQ6N3iZXWUJ2fhRVbO0lv9Gg"
+CHANNEL_ID = -1002489204952     # id group/channel kamu
+THREAD_ID = 3750                # id topik "NEWS" kamu
+HF_TOKEN = "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" 
 
 assert BOT_TOKEN and CHANNEL_ID, "BOT_TOKEN dan CHANNEL_ID wajib diisi lewat GitHub Secrets"
 bot = Bot(token=BOT_TOKEN)
@@ -148,14 +148,14 @@ def process_feed(source, url):
                     photo=img_url,
                     caption=msg,
                     parse_mode="Markdown",
-                    message_thread_id=int(THREAD_ID) if THREAD_ID else None
+                    message_thread_id=THREAD_ID
                 )
             else:
                 bot.send_message(
                     chat_id=CHANNEL_ID,
                     text=msg,
                     parse_mode="Markdown",
-                    message_thread_id=int(THREAD_ID) if THREAD_ID else None
+                    message_thread_id=THREAD_ID
                 )
 
             print(f"[SENT] {source} - {title}")
@@ -176,4 +176,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
