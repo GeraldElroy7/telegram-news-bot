@@ -10,10 +10,11 @@ RSS_BASE = "https://api.rss2json.com/v1/api.json?rss_url="
 
 FEEDS = {
     "CNBC": RSS_BASE + "https://www.cnbcindonesia.com/market/rss",
-    "Kontan": RSS_BASE + "https://www.kontan.co.id/rss",
-    "Bisnis": RSS_BASE + "https://www.bisnis.com/rss",
-    "IDNFinancials": RSS_BASE + "https://www.idnfinancials.com/rss/news",
-    "IDX": RSS_BASE + "https://www.idx.co.id/umbraco/Surface/RssFeed/GetRssFeed?feedName=News"
+    "CNN Indonesia": RSS_BASE + "https://www.cnnindonesia.com/ekonomi/rss",
+    "Kompas": RSS_BASE + "https://rss.kompas.com/kompascom_ekonomi",
+    "Okezone": RSS_BASE + "https://economy.okezone.com/rss",
+    "Tempo": RSS_BASE + "https://rss.tempo.co/bisnis",
+    "Detik": RSS_BASE + "https://finance.detik.com/rss"
 }
 
 KEYWORDS = [
@@ -151,3 +152,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
