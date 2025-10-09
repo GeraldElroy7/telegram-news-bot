@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Bot
 from datetime import datetime, timezone
+from html import unescape
 
 # ========= Konfigurasi =========
 RSS_BASE = "https://api.rss2json.com/v1/api.json?rss_url="
@@ -98,6 +99,8 @@ def format_message(source, title, link, summary):
     return msg[:4000]
 
 # ========= Main Logic =========
+from html import unescape
+
 def process_feed(source, url):
     global sent_hashes
     print(f"[INFO] Fetching {source} via rss2json...")
@@ -116,27 +119,46 @@ def process_feed(source, url):
 
         title = entry.get("title", "").strip()
         link = entry.get("link", "").strip()
-        summary_hint = entry.get("description", "")
-        if not title or not link: continue
+        summary_html = entry.get("description", "")
+        if not title or not link:
+            continue
+
+        # 🖼️ Extract image URL if exists
+        soup = BeautifulSoup(summary_html, "lxml")
+        img_tag = soup.find("img")
+        img_url = img_tag["src"] if img_tag else None
+        summary_hint = unescape(soup.get_text(" ", strip=True))
 
         h = mk_hash(source, title, link)
-        if h in sent_hashes: continue
+        if h in sent_hashes:
+            continue
 
         body = fetch_article_text(link)
-        if not match_keywords(title, summary_hint, body): continue
+        if not match_keywords(title, summary_hint, body):
+            continue
 
         base_text = body or summary_hint or title
         summary = hf_summarize(base_text)
         msg = format_message(source, title, link, summary)
 
         try:
-            if THREAD_ID:
-                bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown", message_thread_id=int(THREAD_ID))
-                print(f"[SENT] {source} - {title} (to thread {THREAD_ID})")
+            if img_url:
+                bot.send_photo(
+                    chat_id=CHANNEL_ID,
+                    photo=img_url,
+                    caption=msg,
+                    parse_mode="Markdown",
+                    message_thread_id=int(THREAD_ID) if THREAD_ID else None
+                )
             else:
-                bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown")
-                print(f"[SENT] {source} - {title}")
+                bot.send_message(
+                    chat_id=CHANNEL_ID,
+                    text=msg,
+                    parse_mode="Markdown",
+                    message_thread_id=int(THREAD_ID) if THREAD_ID else None
+                )
 
+            print(f"[SENT] {source} - {title}")
             sent_hashes.add(h)
             sent_count += 1
             time.sleep(1.5)
@@ -154,3 +176,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
