@@ -61,7 +61,7 @@ def hf_summarize(text, max_chars=SUMMARY_LIMIT):
     if not HF_TOKEN: return simple_lead_summary(text, max_chars)
     try:
         r = requests.post(
-            "https://api-inference.huggingface.co/models/csebuetnlp/mT5_m2o_mbart_mlsum_summary_indonesian",
+            "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
             headers={"Authorization": f"Bearer {HF_TOKEN}"},
             json={"inputs": text[:2000]}, timeout=60)
         r.raise_for_status()
@@ -138,7 +138,12 @@ async def process_feed(source, url):
 
         body = fetch_article_text(link)
         if not match_keywords(title, summary_hint, body):
-            continue
+            # untuk testing, tetap kirim 1 berita biar kelihatan
+            if sent_count == 0:
+                print(f"[TEST] {source}: No keyword match, sending first for debug.")
+            else:
+                continue
+
 
         base_text = body or summary_hint or title
         summary = hf_summarize(base_text)
@@ -180,6 +185,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
