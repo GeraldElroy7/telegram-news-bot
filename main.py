@@ -111,21 +111,35 @@ def format_message(source: str, title: str, link: str, summary: str) -> str:
 # ========= Core Logic =========
 def process_feed(source: str, url: str):
     global sent_hashes
+    print(f"[INFO] Checking {source} feed...")
+
     feed = feedparser.parse(url)
-    for entry in feed.entries[:6]:
+    sent_any = False
+
+    for entry in feed.entries[:3]:  # check top 3 articles only for speed
         title = entry.get("title", "").strip()
         link = entry.get("link", "").strip()
         summary_hint = entry.get("summary", "")
         if not title or not link:
             continue
 
+        print(f"[DEBUG] Found article: {title}")
+
         h = mk_hash(source, title, link)
         if h in sent_hashes:
+            print(f"[SKIP] Already sent: {title}")
             continue
 
+        # Always send at least one article for test
         body = fetch_article_text(link)
-        if not match_keywords(title, summary_hint, body):
-            continue
+        matched = match_keywords(title, summary_hint, body)
+        if not matched:
+            print(f"[INFO] No keyword match for: {title}")
+            # still send one article per source for testing
+            if not sent_any:
+                print(f"[FORCE] Sending first article anyway for test.")
+            else:
+                continue
 
         base_text = body or summary_hint or title
         summary = hf_summarize(base_text, SUMMARY_LIMIT)
@@ -135,11 +149,15 @@ def process_feed(source: str, url: str):
             bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown")
             print(f"[SENT] {source} - {title}")
             sent_hashes.add(h)
+            sent_any = True
             time.sleep(1.5)
         except Exception as e:
             print(f"[ERROR SEND] {e}")
+        # send only one per source for clarity
+        break
 
 def main():
+    print("[START] Running Telegram News Bot (debug mode)")
     for src, u in FEEDS.items():
         try:
             process_feed(src, u)
@@ -148,6 +166,9 @@ def main():
 
     with open(DB_PATH, "w", encoding="utf-8") as f:
         json.dump({"items": list(sent_hashes)}, f, ensure_ascii=False, indent=2)
+    print("[DONE] Debug run completed.")
+
 
 if __name__ == "__main__":
     main()
+
