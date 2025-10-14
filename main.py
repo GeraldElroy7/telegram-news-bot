@@ -24,7 +24,7 @@ KEYWORDS = [
     "INTP","ASSA","BUKA","SIDO","CDIA","MTEL","MEDC","IPO","dividen","buyback",
     "emiten","right issue","pasar modal","saham","prajogo","BRPT","CDIA"
 ]
-ALLOW_ALL_IF_NO_MATCH = True
+ALLOW_ALL_IF_NO_MATCH = False
 SUMMARY_LIMIT = 600
 
 # ========= CONFIG BOT =========
@@ -152,5 +152,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
