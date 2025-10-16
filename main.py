@@ -18,7 +18,7 @@ FEEDS = {
 }
 
 KEYWORDS = [
-    "IHSG","BEI","IDX","inflasi","BI rate","suku bunga","obligasi",
+    "IHSG","BEI","IDX","LQ45","BI rate","suku bunga","emas",
     "BBCA","BBRI","BMRI","BBNI","ASII","TLKM","ANTM","INCO","MDKA","ADRO","PGAS",
     "PTBA","BRIS","AMMN","GOTO","ARTO","UNVR","ICBP","INDF","KLBF","CPIN","SMGR",
     "INTP","ASSA","BUKA","SIDO","CDIA","MTEL","MEDC","IPO","dividen","buyback",
@@ -152,6 +152,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
